@@ -108,7 +108,7 @@
           <div class="type_msg">
             <div class="input_msg_write">
               <input @keyup.enter="saveMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
-              <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+              <button v-on:click="saveMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
             </div>
           </div>
         </div>
@@ -130,14 +130,14 @@ export default {
     saveMessage(){
       //Save to firestore
       db.collection("chat").add({
-        message: this.message
+        message: this.message,
+        createdAt: new Date()
       })
 
       this.message = null;
-      this.fetchMessages();
     },
     fetchMessages(){
-      db.collection("chat").get().then(querySnapshot=> {
+      db.collection("chat").orderBy("createdAt").onSnapshot(querySnapshot=> {
         let allMessages = [];
         querySnapshot.forEach((doc) => {
           allMessages.push(doc.data());
