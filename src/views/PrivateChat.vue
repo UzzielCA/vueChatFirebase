@@ -95,7 +95,7 @@
                 <div class="outgoing_msg">
                   <div class="sent_msg">
                     <p>{{message.message}}</p>
-                      <span class="time_date"> | {{message.author}}</span>
+                      <span class="time_date"> {{message.createdAt | moment}} | {{message.author}}</span>
                   </div>
                 </div>
               </div>
@@ -105,7 +105,7 @@
                   <div class="received_msg">
                     <div class="received_withd_msg">
                       <p>{{message.message}}</p>
-                      <span class="time_date">   | {{message.author}}</span>
+                      <span class="time_date">  {{message.createdAt | moment}} | {{message.author}}</span>
                     </div>
                   </div>
                 </div>
@@ -126,6 +126,7 @@
 
 <script>
 import firebase from 'firebase'
+import moment from 'moment'
 
 export default {
   data(){
@@ -164,6 +165,11 @@ export default {
           this.scrollToBottom()
         },1000);
       });
+    }
+  },
+  filters: {
+    moment: function (date) {
+      return moment(date.toDate()).format('MMM Do YYYY, h:mm:ss a');
     }
   },
   created(){
