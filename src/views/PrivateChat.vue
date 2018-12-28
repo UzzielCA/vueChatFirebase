@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-<div class="messaging">
+    <div class="messaging">
       <div class="inbox_msg">
         <div class="inbox_people">
           <div class="headind_srch">
@@ -90,48 +90,64 @@
         </div>
         <div class="mesgs">
           <div class="msg_history">
-            <div class="outgoing_msg">
-              <div class="sent_msg">
-                <p>Test which is a new approach to have all
-                  solutions</p>
-                <span class="time_date"> 11:01 AM    |    June 9</span> </div>
-            </div>
-            <div class="incoming_msg" v-for="(message, index) in messages">
-              <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
-              <div class="received_msg">
-                <div class="received_withd_msg">
-                  <p>{{message.message}}</p>
-                  <span class="time_date"> 11:01 AM    |    Today</span></div>
+            <div v-for="(message, index) in messages">
+              <div v-if="message.author === authUser.displayName">
+                <div class="outgoing_msg">
+                  <div class="sent_msg">
+                    <p>{{message.message}}</p>
+                      <span class="time_date"> | {{message.author}}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else>
+                <div class="incoming_msg" >
+                  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                  <div class="received_msg">
+                    <div class="received_withd_msg">
+                      <p>{{message.message}}</p>
+                      <span class="time_date">   | {{message.author}}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="type_msg">
-            <div class="input_msg_write">
-              <input @keyup.enter="saveMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
-              <button v-on:click="saveMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+            <div class="type_msg">
+              <div class="input_msg_write">
+                <input @keyup.enter="saveMessage" v-model="message" type="text" class="write_msg" placeholder="Type a message" />
+                <button v-on:click="saveMessage" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-    </div></div>
+    </div>
+  </div>
 </template>
 
 <script>
+import firebase from 'firebase'
 
 export default {
   data(){
     return {
       message:null,
-      messages:null
+      messages:[],
+      authUser:{}
     }
   },
   methods: {
+    scrollToBottom(){
+      let box = document.querySelector(".msg_history");
+      box.scrollTop = box.scrollHeight;
+    },
     saveMessage(){
       //Save to firestore
       db.collection("chat").add({
         message: this.message,
-        createdAt: new Date()
+        createdAt: new Date(),
+        author: this.authUser.displayName
+      }).then(() =>{
+        this.scrollToBottom();
       })
 
       this.message = null;
@@ -143,11 +159,34 @@ export default {
           allMessages.push(doc.data());
         });
         this.messages = allMessages;
+
+        setTimeout(()=>{
+          this.scrollToBottom()
+        },1000);
       });
     }
   },
   created(){
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.authUser = user;
+      } else {
+        this.authUser = {};
+      }
+    })
     this.fetchMessages();
+  },
+  beforeRouteEnter(to, from, next){
+    next(vm =>{
+      firebase.auth().onAuthStateChanged(user => {
+        console.log("user", user);
+        if (user) {
+          next();
+        } else {
+          vm.$router.push("/login")
+        }
+      })
+    })
   }
 }
 </script>
